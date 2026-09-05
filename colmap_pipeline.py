@@ -2,10 +2,9 @@ import subprocess
 import os
 import logging
 
-logger = logging.getLogger(__name__)
+from config import settings
 
-UPLOAD_DIR = "uploads"
-SPARSE_DIR = "sparse"
+logger = logging.getLogger(__name__)
 
 
 class ColmapError(Exception):
@@ -13,10 +12,11 @@ class ColmapError(Exception):
     pass
 
 
-def _run_command(stage_name: str, command: list[str]) -> None: #Sneaky little hinting
+def _run_command(stage_name: str, command: list[str]) -> None:
     """
     Run a COLMAP command via subprocess and raise ColmapError if it fails.
     (Basically running the thing that maps the mesh then tells me if something goes wrong)
+    Logs stdout and stderr for debugging.
     """
     logger.info(f"[COLMAP] Starting stage: {stage_name}")
     logger.debug(f"[COLMAP] Command: {' '.join(command)}")
@@ -45,8 +45,8 @@ def _run_command(stage_name: str, command: list[str]) -> None: #Sneaky little hi
 def _feature_extraction(database_path: str, image_path: str) -> None:
     """
     Stage 1: Detect keypoints and descriptors in every image.
-    (Looking for interesting points and descriptions of parts of the image)
     Results are stored in the SQLite database file.
+    (Looking for interesting points and descriptions of parts of the image)
     """
     _run_command(
         "Feature Extraction",
@@ -54,9 +54,8 @@ def _feature_extraction(database_path: str, image_path: str) -> None:
             "colmap", "feature_extractor",
             "--database_path", database_path,
             "--image_path", image_path,
-            # Use SIFT on CPU — change to 1 if your Docker container has GPU access
-            "--ImageReader.single_camera", "1",  # Assume all images share one camera model
-            "--SiftExtraction.use_gpu", "0",
+            "--ImageReader.single_camera", str(int(settings.colmap_single_camera)),
+            "--SiftExtraction.use_gpu", str(int(settings.colmap_use_gpu)),
         ],
     )
 
@@ -64,16 +63,16 @@ def _feature_extraction(database_path: str, image_path: str) -> None:
 def _feature_matching(database_path: str) -> None:
     """
     Stage 2: Match keypoints across every pair of images.
-    (Piecing images together)
     Exhaustive matching compares all pairs — suitable for small photo sets (<100 images).
     For larger sets, switch to sequential_matcher or vocab_tree_matcher.
+    (Piecing images together)
     """
     _run_command(
         "Feature Matching",
         [
             "colmap", "exhaustive_matcher",
             "--database_path", database_path,
-            "--SiftMatching.use_gpu", "0",
+            "--SiftMatching.use_gpu", str(int(settings.colmap_use_gpu)),
         ],
     )
 
@@ -106,9 +105,9 @@ def run_colmap(job_id: str, jobs: dict) -> str:
     Run the full COLMAP SfM pipeline for a given job.
 
     Stages:
-        1. Feature extraction  →  33% progress
-        2. Feature matching    →  66% progress
-        3. Sparse reconstruction → 100% progress
+        1. Feature extraction - 33% progress
+        2. Feature matching  - 66% progress
+        3. Sparse reconstruction - 100% progress
 
     Args:
         job_id: The unique job identifier.
@@ -121,9 +120,9 @@ def run_colmap(job_id: str, jobs: dict) -> str:
         ColmapError: If any COLMAP stage fails.
         FileNotFoundError: If the image folder for the job doesn't exist.
     """
-    image_path = os.path.join(UPLOAD_DIR, job_id)
+    image_path = os.path.join(settings.upload_dir, job_id)
     database_path = os.path.join(image_path, "database.db")
-    sparse_output_path = os.path.join(SPARSE_DIR, job_id)
+    sparse_output_path = os.path.join(settings.sparse_dir, job_id)
 
     if not os.path.exists(image_path):
         raise FileNotFoundError(

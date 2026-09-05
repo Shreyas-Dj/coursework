@@ -5,3 +5,6 @@ __pycache__/
 # Ignore your upload and output directories
 uploads/
 outputs/
+
+# Ignore local environment settings
+.env

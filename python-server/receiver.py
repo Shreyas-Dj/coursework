@@ -19,7 +19,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 # Restrict uploaded files to standard image formats to prevent processing errors or security vulnerabilities
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/tiff"}
 
-# NOTE: In-memory store — all job state is lost if the server restarts.
+# NOTE: In-memory store all job state is lost if the server restarts.
 # Replace with a database (e.g. SQLite via SQLModel) for production.
 # Dictionary acting as a temporary database to track job statuses, metadata, and progress
 jobs: dict[str, dict] = {}
