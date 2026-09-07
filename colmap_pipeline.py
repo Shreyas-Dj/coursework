@@ -86,6 +86,7 @@ def _sparse_reconstruction(
     Stage 3: Structure-from-Motion (SfM).
     Uses matched features to estimate camera poses and produce a sparse point cloud.
     Output is written to sparse_output_path as a COLMAP model (cameras.bin, images.bin, points3D.bin).
+    (Figures out where the camera was and what the 3D points are in space)
     """
     os.makedirs(sparse_output_path, exist_ok=True)
 
