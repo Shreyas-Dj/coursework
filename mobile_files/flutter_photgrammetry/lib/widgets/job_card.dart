@@ -2,7 +2,7 @@
 // Receives a Job object and an onTap callback — it doesn't manage any state itself.
  
 import 'package:flutter/material.dart';
-import '../../models/job.dart';
+import '../models/job.dart';
  
 class JobCard extends StatelessWidget {
   // The job data to display
@@ -57,10 +57,10 @@ class JobCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1c1c1a),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFF2e2e2b), width: 0.5),
+        // No border or radius here — the parent container in home_screen.dart
+        // handles the outer shape and groups all cards together
+        decoration: const BoxDecoration(
+          color: Color(0xFF1c1c1a),
         ),
         child: Row(
           children: [
@@ -203,4 +203,3 @@ class _BadgeStyle {
     required this.label,
   });
 }
- 

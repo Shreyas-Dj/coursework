@@ -3,8 +3,8 @@
 // Uses setState to manage loading state and the jobs list — no external state manager.
  
 import 'package:flutter/material.dart';
-import '../../models/job.dart';
-import '../../widgets/job_card.dart';
+import '../models/job.dart';
+import '../widgets/job_card.dart';
  
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -298,22 +298,38 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 )
               else
-                // Render one JobCard per job, spaced with a gap between each
+                // All cards grouped inside one rounded container.
+                // A thin divider line separates each card instead of individual borders.
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        // Add a gap between cards but not after the last one
-                        if (index.isOdd) return const SizedBox(height: 10);
-                        final job = _jobs[index ~/ 2];
-                        return JobCard(
-                          job: job,
-                          onTap: () => _onJobTapped(job),
-                        );
-                      },
-                      // Double the count to account for the gap spacers
-                      childCount: _jobs.length * 2 - 1,
+                  sliver: SliverToBoxAdapter(
+                    child: ClipRRect(
+                      // Single rounded corner for the whole group
+                      borderRadius: BorderRadius.circular(14),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1c1c1a),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Column(
+                          children: [
+                            for (int i = 0; i < _jobs.length; i++) ...[
+                              JobCard(
+                                job: _jobs[i],
+                                onTap: () => _onJobTapped(_jobs[i]),
+                              ),
+                              // Add a divider after every card except the last
+                              if (i < _jobs.length - 1)
+                                const Divider(
+                                  height: 1,
+                                  thickness: 0.5,
+                                  color: Color(0xFF2e2e2b),
+                                  indent: 74, // Aligns with the text, not the icon
+                                ),
+                            ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
