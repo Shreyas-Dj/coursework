@@ -1,3 +1,4 @@
+# Imports
 from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
 from typing import Literal
 import uuid
@@ -10,11 +11,12 @@ from colmap_pipeline import run_colmap, ColmapError
 
 app = FastAPI()
 
+# Making folders
 os.makedirs(settings.upload_dir, exist_ok=True)
 os.makedirs(settings.output_dir, exist_ok=True)
 
 # NOTE: In-memory store — all job state is lost if the server restarts.
-# Replace with a database (e.g. SQLite via SQLModel) for production.
+# Replace with a database once finished.
 jobs: dict[str, dict] = {}
 
 
@@ -28,6 +30,7 @@ async def process_mesh_background(job_id: str):
 
 
 @app.post("/jobs", status_code=201)
+# Create a new reconstruction job and state options
 async def create_job(
     project_name: str,
     output_format: Literal["obj", "glb", "ply", "stl"],
@@ -35,13 +38,14 @@ async def create_job(
     background_tasks: BackgroundTasks,
     files: list[UploadFile] = File(...),
 ):
-    # Validate image count against settings
+    # Validate image count against preset values in settings
     if len(files) < settings.min_images:
         raise HTTPException(
             status_code=422,
             detail=f"At least {settings.min_images} images are required for reconstruction. "
                    f"Got {len(files)}.",
         )
+    # If there are too many images, give an error
     if len(files) > settings.max_images:
         raise HTTPException(
             status_code=422,
@@ -58,6 +62,7 @@ async def create_job(
                        f"Allowed types: {', '.join(settings.allowed_image_types)}",
             )
 
+    # Create a unique job ID and folder for the uploads
     job_id = str(uuid.uuid4())
     job_folder = os.path.join(settings.upload_dir, job_id)
     os.makedirs(job_folder, exist_ok=True)
@@ -97,7 +102,7 @@ async def create_job(
         "status": jobs[job_id]["status"],
     }
 
-
+# Get job details
 @app.get("/jobs/{job_id}")
 async def get_job(job_id: str):
     """Return all metadata for a job."""
@@ -106,6 +111,7 @@ async def get_job(job_id: str):
     return {"job_id": job_id, **jobs[job_id]}
 
 
+# Get job status
 @app.get("/jobs/{job_id}/status")
 async def get_job_status(job_id: str):
     """Lightweight endpoint for polling progress from the mobile app."""
@@ -118,6 +124,7 @@ async def get_job_status(job_id: str):
     }
 
 
+# Delete job
 @app.delete("/jobs/{job_id}", status_code=200)
 async def delete_job(job_id: str):
     """Cancel a queued job or clean up a completed one, removing uploaded files."""

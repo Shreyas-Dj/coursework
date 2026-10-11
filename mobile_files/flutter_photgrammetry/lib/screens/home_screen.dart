@@ -1,46 +1,45 @@
-// The main screen the user sees when they open the app.
-// Shows a "New job" button at the top and a scrollable list of recent jobs below.
-// Uses setState to manage loading state and the jobs list — no external state manager.
- 
+// This is the first screen people see. It shows a button to start a scan
+// and a list of recent 3D reconstruction jobs.
+
 import 'package:flutter/material.dart';
+
+import 'capture_screen.dart';
 import '../models/job.dart';
 import '../widgets/job_card.dart';
- 
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
- 
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
- 
+
 class _HomeScreenState extends State<HomeScreen> {
-  // Whether the screen is currently fetching jobs from the server
+  // True while the job list is being loaded.
   bool _isLoading = false;
- 
-  // The list of jobs displayed on screen — starts empty until fetched
+
+  // The jobs shown on this screen.
   List<Job> _jobs = [];
- 
-  // Which bottom nav tab is selected — 0 = Home
+
+  // The selected bottom menu item. Home is item 0.
   int _selectedNavIndex = 0;
- 
+
   @override
   void initState() {
     super.initState();
-    // Fetch jobs as soon as the screen is first shown
+    // Load the job list when the home screen first opens.
     _loadJobs();
   }
- 
-  // Fetches the job list from the server and updates the UI.
-  // Replace the placeholder data here with a real API call once
-  // your server is running and accessible from the device.
+
+  // Loads jobs and refreshes the screen when they are ready.
   Future<void> _loadJobs() async {
     setState(() => _isLoading = true);
- 
-    // TODO: Replace with real API call e.g.:
+
+    // Replace the sample jobs below with a request to your server:
     // final response = await dio.get('http://YOUR_SERVER_IP:8000/jobs');
     // final list = (response.data as List).map((j) => Job.fromJson(j)).toList();
- 
-    // Placeholder jobs so the UI renders correctly while the server isn't connected
+
+    // Sample jobs keep the screen useful while the server is not connected.
     await Future.delayed(const Duration(milliseconds: 600));
     final placeholderJobs = [
       const Job(
@@ -84,51 +83,66 @@ class _HomeScreenState extends State<HomeScreen> {
         fileCount: 61,
       ),
     ];
- 
+
     setState(() {
       _jobs = placeholderJobs;
       _isLoading = false;
     });
   }
- 
-  // Called when the user taps a job card — will navigate to a job detail screen later
+
+  // Shows which job was tapped. This can open a job details screen later.
   void _onJobTapped(Job job) {
-    // TODO: Navigate to job detail screen
+    // To add a details screen, navigate to it from here:
     // Navigator.push(context, MaterialPageRoute(
     //   builder: (_) => JobDetailScreen(jobId: job.jobId),
     // ));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('Tapped: ${job.projectName}')));
+  }
+
+  Future<void> _onNewJobTapped() async {
+    // Open the camera screen and wait for it to return the captured photo paths.
+    final photoPaths = await Navigator.of(context).push<List<String>>(
+      MaterialPageRoute(builder: (_) => const CaptureScreen()),
+    );
+    // Closing the camera or taking no photos means there is nothing to report.
+    if (!mounted || photoPaths == null || photoPaths.isEmpty) return;
+
+    // Photo upload and job creation are not connected yet.
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Tapped: ${job.projectName}')),
+      SnackBar(
+        content: Text(
+          '${photoPaths.length} photos captured. Job upload is not set up yet.',
+        ),
+      ),
     );
   }
- 
-  // Called when the user taps "New job" — will navigate to the job creation screen later
-  void _onNewJobTapped() {
-    // TODO: Navigate to new job screen
-    // Navigator.push(context, MaterialPageRoute(
-    //   builder: (_) => const NewJobScreen(),
-    // ));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('New job screen coming soon')),
-    );
+
+  void _onNavigationTapped(int index) {
+    if (index == 2) {
+      // The Capture menu item opens the camera screen.
+      _onNewJobTapped();
+    } else {
+      // Other menu items just update which item looks selected.
+      setState(() => _selectedNavIndex = index);
+    }
   }
- 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF111111),
- 
-      // The body scrolls as one unit — header, button, and job list together
+
+      // Keep the page safe from the phone's system bars and let it scroll.
       body: SafeArea(
         child: RefreshIndicator(
-          // Pull down to refresh the job list
+          // Pull down to load the jobs again.
           onRefresh: _loadJobs,
           color: const Color(0xFF5a8fd4),
           backgroundColor: const Color(0xFF1c1c1a),
           child: CustomScrollView(
             slivers: [
- 
-              // ── Header ──────────────────────────────────────────────────
+              // App name and short description.
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
@@ -155,8 +169,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
- 
-              // ── New job button ───────────────────────────────────────────
+
+              // Tapping this button opens the camera to start a scan.
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
@@ -164,14 +178,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     onTap: _onNewJobTapped,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFf0f0ee),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Row(
                         children: [
-                          // Dark icon circle on the left
+                          // Add icon shown at the left of the button.
                           Container(
                             width: 36,
                             height: 36,
@@ -186,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          // Button label and subtitle
+                          // Button title and short explanation.
                           const Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,8 +237,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
- 
-              // ── Section header ───────────────────────────────────────────
+
+              // Title above the recent jobs list.
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
@@ -249,10 +265,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
- 
-              // ── Job list ─────────────────────────────────────────────────
+
+              // Show a spinner, an empty message, or the available jobs.
               if (_isLoading)
-                // Show a spinner while jobs are being fetched
+                // The jobs are still loading.
                 const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.only(top: 48),
@@ -264,7 +280,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 )
               else if (_jobs.isEmpty)
-                // Empty state when no jobs exist yet
+                // There are no jobs to show yet.
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
@@ -274,7 +290,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: const Color(0xFF1c1c1a),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                            color: const Color(0xFF2e2e2b), width: 0.5),
+                          color: const Color(0xFF2e2e2b),
+                          width: 0.5,
+                        ),
                       ),
                       child: const Column(
                         children: [
@@ -298,13 +316,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 )
               else
-                // All cards grouped inside one rounded container.
-                // A thin divider line separates each card instead of individual borders.
+                // Put the job cards together in one rounded container.
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   sliver: SliverToBoxAdapter(
                     child: ClipRRect(
-                      // Single rounded corner for the whole group
+                      // Round the outside corners of the whole job list.
                       borderRadius: BorderRadius.circular(14),
                       child: Container(
                         decoration: BoxDecoration(
@@ -318,13 +335,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 job: _jobs[i],
                                 onTap: () => _onJobTapped(_jobs[i]),
                               ),
-                              // Add a divider after every card except the last
+                              // Separate each job from the next one.
                               if (i < _jobs.length - 1)
                                 const Divider(
                                   height: 1,
                                   thickness: 0.5,
                                   color: Color(0xFF2e2e2b),
-                                  indent: 74, // Aligns with the text, not the icon
+                                  indent:
+                                      74, // Line up the divider with the job text.
                                 ),
                             ],
                           ],
@@ -337,11 +355,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
- 
-      // ── Bottom navigation bar ────────────────────────────────────────────
+
+      // Menu at the bottom for moving between app sections.
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedNavIndex,
-        onTap: (index) => setState(() => _selectedNavIndex = index),
+        onTap: _onNavigationTapped,
         backgroundColor: const Color(0xFF161614),
         selectedItemColor: const Color(0xFFf0f0ee),
         unselectedItemColor: const Color(0xFF555555),

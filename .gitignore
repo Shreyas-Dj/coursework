@@ -2,7 +2,7 @@
 __pycache__/
 .pytest_cache/
 
-# Ignore your upload and output directories
+# Ignore upload and output directories
 uploads/
 outputs/
 
