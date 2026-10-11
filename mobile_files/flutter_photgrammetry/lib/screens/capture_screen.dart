@@ -718,7 +718,7 @@ class _CaptureScreenState extends State<CaptureScreen>
     if (count < 20) {
       return 'Aim for overlap and keep the subject framed steadily';
     }
-    return 'Great coverage. Keep at it bro for extra detail';
+    return 'Great coverage. Keep at it gng for extra detail';
   }
 
   bool get controllerReady =>
