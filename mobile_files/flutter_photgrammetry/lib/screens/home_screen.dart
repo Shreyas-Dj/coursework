@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart';
 
-import 'capture_screen.dart';
+import 'new_project_screen.dart';
 import '../models/job.dart';
 import '../widgets/job_card.dart';
 
@@ -101,26 +101,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _onNewJobTapped() async {
-    // Open the camera screen and wait for it to return the captured photo paths.
-    final photoPaths = await Navigator.of(context).push<List<String>>(
-      MaterialPageRoute(builder: (_) => const CaptureScreen()),
-    );
-    // Closing the camera or taking no photos means there is nothing to report.
-    if (!mounted || photoPaths == null || photoPaths.isEmpty) return;
-
-    // Photo upload and job creation are not connected yet.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '${photoPaths.length} photos captured. Job upload is not set up yet.',
-        ),
-      ),
-    );
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const NewProjectScreen()));
   }
 
   void _onNavigationTapped(int index) {
     if (index == 2) {
-      // The Capture menu item opens the camera screen.
+      // The Capture tab opens the new project flow to match the scan workflow.
       _onNewJobTapped();
     } else {
       // Other menu items just update which item looks selected.
@@ -208,7 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'New job',
+                                  'New project',
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w500,
@@ -217,7 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 SizedBox(height: 1),
                                 Text(
-                                  'Upload photos to start reconstruction',
+                                  'Define scan settings before capture',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Color(0xFF555555),
@@ -303,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           SizedBox(height: 10),
                           Text(
-                            'No jobs yet. Tap "New job" to get started.',
+                            'No jobs yet. Tap "New project" to get started.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 13,
@@ -341,8 +328,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   height: 1,
                                   thickness: 0.5,
                                   color: Color(0xFF2e2e2b),
-                                  indent:
-                                      74, // Line up the divider with the job text.
+                                  indent: 74, // Line up the divider with the job text.
                                 ),
                             ],
                           ],

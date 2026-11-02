@@ -1,0 +1,19 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - uploads:/app/uploads
+      - outputs:/app/outputs
+      - sparse:/app/sparse
+      - dense:/app/dense
+    restart: unless-stopped
+
+volumes:
+  uploads:
+  outputs:
+  sparse:
+  dense:

@@ -1,0 +1,14 @@
+.git
+.vscode
+.env
+__pycache__
+*.py[cod]
+.pytest_cache
+uploads
+outputs
+sparse
+dense
+mobile_files
+**/.dart_tool
+**/.gradle
+**/build
